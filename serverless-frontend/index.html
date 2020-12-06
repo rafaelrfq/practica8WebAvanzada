@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <!-- Required Stylesheets -->
+    <link
+            type="text/css"
+            rel="stylesheet"
+            href="https://unpkg.com/bootstrap/dist/css/bootstrap.min.css"
+    />
+    <link
+            type="text/css"
+            rel="stylesheet"
+            href="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.css"
+    />
+
+    <!-- Required scripts -->
+    <script src="https://unpkg.com/vue"></script>
+    <script src="https://unpkg.com/babel-polyfill@latest/dist/polyfill.min.js"></script>
+    <script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+    <title>Reservas de Laboratorio - EICT</title>
+</head>
+<body>
+
+<div class="container" id="app">
+    <div>
+        <br>
+        <a href="https://practica8-reservas.s3.amazonaws.com/index.html">
+            <img src="https://practica8-reservas.s3.amazonaws.com/pucmm-logo.png" width="240px" heigth="120px">
+        </a>
+    </div>
+    <div class="row mt-3">
+        <div class="col-sm">
+            <h1 class="text-center">Reservas de Laboratorio - EICT</h1><br>
+            <div>
+                <b-button variant="outline-primary" v-b-modal.modal-1 @click="agregarReserva">Agregar Reserva</b-button>
+                <b-button variant="outline-secondary" @click="listaReservas">Mostrar Reservas Activas</b-button>
+                <b-button variant="outline-danger" @click="listaAllReservas">Mostrar Todas Las Reservas</b-button>
+            </div>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col-sm">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Nombre</th>
+                    <th scope="col">Laboratorio</th>
+                    <th scope="col">Fecha y Hora</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-for="reserva in reservas">
+                    <td>{{reserva.id}}</td>
+                    <td>{{reserva.nombre}}</td>
+                    <td>{{reserva.laboratorio}}</td>
+                    <td>Fecha: {{reserva.fecha}}<br>Hora: {{reserva.horaInicio}} a {{reserva.horaFinal}}</td>
+                    <td>
+                        <button class="btn btn-danger" @click="eliminarReserva(reserva)">Eliminar</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <b-modal id="modal-1" hide-footer :title="titulo">
+        <b-form @submit.prevent="crearReserva" @reset="limpiar" >
+
+            <!-- ID       -->
+            <b-form-group
+                    label="Id"
+                    label-for="g1">
+                <b-form-input
+                        id = "g1"
+                        v-model="nuevaReserva.id"
+                        type="number"
+                        required
+                        placeholder="ID"
+                ></b-form-input>
+            </b-form-group>
+
+            <!-- Nombre            -->
+            <b-form-group
+                    label="Nombre:"
+                    label-for="g2">
+                <b-form-input
+                        id = "g2"
+                        v-model="nuevaReserva.nombre"
+                        type="text"
+                        required
+                        placeholder="Nombre"
+                ></b-form-input>
+            </b-form-group>
+
+            <!-- Laboratorio            -->
+            <b-form-group
+                    label="Laboratorio:"
+                    label-for="g3">
+                <b-form-input
+                        id = "g3"
+                        v-model="nuevaReserva.laboratorio"
+                        type="text"
+                        required
+                        placeholder="Laboratorio"
+                ></b-form-input>
+            </b-form-group>
+
+            <!-- Correo            -->
+            <b-form-group
+                    label="Correo:"
+                    label-for="g4">
+                <b-form-input
+                        id = "g4"
+                        v-model="nuevaReserva.correo"
+                        type="text"
+                        required
+                        placeholder="Correo"
+                ></b-form-input>
+            </b-form-group>
+
+            <!-- Fecha            -->
+            <b-form-group
+                    label="Fecha:"
+                    label-for="g5">
+                <b-form-input
+                        id = "g5"
+                        v-model="nuevaReserva.fecha"
+                        type="date"
+                        required
+                        placeholder="Fecha"
+                ></b-form-input>
+            </b-form-group>
+
+            <!-- Hora Inicio            -->
+            <b-form-group
+                    label="Hora Inicio:"
+                    label-for="g6">
+                <b-form-input
+                        id = "g6"
+                        v-model="nuevaReserva.horaInicio"
+                        type="number"
+                        min=8
+                        max=21
+                        required
+                        placeholder="Hora Inicio (Formato 24h)"
+                ></b-form-input>
+            </b-form-group>
+
+            <!-- Hora Final            -->
+            <b-form-group
+                    label="Hora Final:"
+                    label-for="g7">
+                <b-form-input
+                        id = "g7"
+                        v-model="nuevaReserva.horaFinal"
+                        type="number"
+                        min=9
+                        max=22
+                        required
+                        placeholder="Hora Final (Formato 24h)"
+                ></b-form-input>
+            </b-form-group>
+            <b-button type="submit" variant="primary">Enviar</b-button>
+            <b-button type="reset" variant="danger">Limpiar</b-button>
+        </b-form>
+    </b-modal>
+</div>
+
+<!-- Libreria Vuejs -->
+<script>
+
+
+    var URL_API = "https://6eq82tdm7a.execute-api.us-east-1.amazonaws.com/test";
+
+    var app = new Vue({
+
+        el: '#app',
+
+        data: {
+            titulo: "Creación de Reservas",
+            editando: false,
+            nuevaReserva: {
+                "id": "",
+                "nombre": "",
+                "correo": "",
+                "laboratorio": "",
+                "fecha": "",
+                "horaInicio": "",
+                "horaFinal": ""
+            },
+            reservas: []
+        } ,
+
+        created: function () {//representa la función de inicialización Vuejs
+
+            console.log("Inicializando el proyecto en Vuejs: ", this.titulo);
+        },
+
+        mounted: function () {
+
+            this.$nextTick(function () {  //garantizo que todos los elementos están renderizados.
+                console.log("Cargando todo el render del proyecto");
+                this.listaReservas();
+            });
+        },
+
+        methods: {
+
+            listaReservas: function(){
+                console.log("Cargando lista de Reservas");
+                axios.get(`${URL_API}/reservas`).then(response => {
+                    //
+                    console.log("Recuperando información del servidor");
+                    console.log("Objeto: "+JSON.stringify(response.data));
+                    //
+                    let today = new Date();
+                    this.reservas = response.data.filter( (resTemp) => {
+                        if (Date.parse(resTemp.fecha) >= today){
+                            return resTemp;
+                        }
+                    });
+                }).catch(error => { console.log(error); });
+            },
+
+            listaAllReservas: function(){
+                console.log("Cargando lista de todas las Reservas");
+                axios.get(`${URL_API}/reservas`).then(response => {
+                    //
+                    console.log("Recuperando información del servidor");
+                    console.log("Objeto: "+JSON.stringify(response.data));
+                    //
+                    this.reservas = response.data;
+                }).catch(error => { console.log(error); });
+            },
+
+            agregarReserva: function(){
+                console.log("Nueva Reserva");
+                this.titulo = "Nueva Reserva";
+                this.editando = false;
+                this.limpiar();
+            },
+
+            crearReserva: function(){
+                console.log("datos para almacenar: ", this.nuevaReserva);
+                if(!this.editando){
+                    //creando
+                    axios.post(`${URL_API}/reservas/${this.nuevaReserva.id}`, this.nuevaReserva).then(response => {
+                        this.limpiar();
+                        this.listaReservas();
+                    }).catch(error => console.log(error));
+                }
+
+                this.$bvModal.hide('modal-1');
+            },
+
+            eliminarReserva: function (reserva) {
+                console.log("Eliminando el id: ", reserva.id);
+                axios.delete(`${URL_API}/reservas/${reserva.id}`).then(response => {
+                    this.listaReservas();
+                }).catch(error => console.log(error));
+            },
+
+            limpiar: function () {
+                this.nuevaReserva.id = '',
+                this.nuevaReserva.nombre = '',
+                this.nuevaReserva.correo = '',
+                this.nuevaReserva.laboratorio = '',
+                this.nuevaReserva.fecha = '',
+                this.nuevaReserva.horaInicio = '',
+                this.nuevaReserva.horaFinal = ''
+            }
+
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "ReservasInputModel",
+    "type": "object",
+    "properties": {
+        "id": { "type": "string" },
+        "nombre": { "type": "string" },
+        "correo": { "type": "string" },
+        "laboratorio": { "type": "string" },
+        "fecha": { "type": "string" },
+        "horaInicio": { "type": "string" },
+        "horaFinal": { "type": "string" }
+    }
+}
