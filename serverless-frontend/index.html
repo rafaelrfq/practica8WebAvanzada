@@ -40,6 +40,7 @@
             <h1 class="text-center">Reservas de Laboratorio - EICT</h1><br>
             <div>
                 <b-button variant="outline-primary" v-b-modal.modal-1 @click="agregarReserva">Agregar Reserva</b-button>
+                <b-button variant="outline-success" v-b-modal.modal-2 @click="limpiarFiltro">Filtrar Por Fecha</b-button>
                 <b-button variant="outline-secondary" @click="listaReservas">Mostrar Reservas Activas</b-button>
                 <b-button variant="outline-danger" @click="listaAllReservas">Mostrar Todas Las Reservas</b-button>
             </div>
@@ -173,6 +174,40 @@
             <b-button type="reset" variant="danger">Limpiar</b-button>
         </b-form>
     </b-modal>
+
+    <b-modal id="modal-2" hide-footer :title="titulo">
+        <b-form @submit.prevent="filtrarPorFecha" @reset="limpiarFiltro" >
+
+            <!-- Fecha inicial       -->
+            <b-form-group
+                    label="Fecha inicial"
+                    label-for="f1">
+                <b-form-input
+                        id = "f1"
+                        v-model="filtro.fechaInicio"
+                        type="text"
+                        required
+                        placeholder="Fecha inicial"
+                ></b-form-input>
+            </b-form-group>
+
+            <!-- Fecha final            -->
+            <b-form-group
+                    label="Fecha final:"
+                    label-for="f2">
+                <b-form-input
+                        id = "f2"
+                        v-model="filtro.fechaFinal"
+                        type="text"
+                        required
+                        placeholder="Fecha final"
+                ></b-form-input>
+            </b-form-group>
+
+            <b-button type="submit" variant="primary">Enviar</b-button>
+            <b-button type="reset" variant="danger">Limpiar</b-button>
+        </b-form>
+    </b-modal>
 </div>
 
 <!-- Libreria Vuejs -->
@@ -188,6 +223,10 @@
         data: {
             titulo: "Creación de Reservas",
             editando: false,
+            filtro: {
+                "fechaInicio": "",
+                "fechaFinal": ""
+            },
             nuevaReserva: {
                 "id": "",
                 "nombre": "",
@@ -269,6 +308,24 @@
                 }).catch(error => console.log(error));
             },
 
+            filtrarPorFecha: function(){
+                console.log("Comenzando filtrado por fecha");
+                axios.get(`${URL_API}/reservas`).then(response => {
+                    //
+                    console.log("Recuperando información del servidor");
+                    console.log("Objeto: "+JSON.stringify(response.data));
+                    //
+                    let inicio = Date.parse(this.filtro.fechaInicio);
+                    let final = Date.parse(this.filtro.fechaFinal);
+                    this.reservas = response.data.filter( (resTemp) => {
+                        if (Date.parse(resTemp.fecha) >= inicio && Date.parse(resTemp.fecha) <= final){
+                            return resTemp;
+                        }
+                    });
+                    this.$bvModal.hide('modal-2');
+                }).catch(error => { console.log(error); });
+            },
+
             limpiar: function () {
                 this.nuevaReserva.id = '',
                 this.nuevaReserva.nombre = '',
@@ -277,6 +334,11 @@
                 this.nuevaReserva.fecha = '',
                 this.nuevaReserva.horaInicio = '',
                 this.nuevaReserva.horaFinal = ''
+            },
+
+            limpiarFiltro: function () {
+                this.filtro.fechaInicio = '',
+                this.filtro.fechaFinal = ''
             }
 
         }
